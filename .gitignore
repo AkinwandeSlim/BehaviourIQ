@@ -1,0 +1,44 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data files (too large for GitHub)
+*.csv
+data/*.csv
+
+# Cache files
+*.cache
+.pytest_cache/
+.streamlit/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Compiled files
+*.egg-info/
+dist/
+build/
+
+# Large files
+chroma_db/
+*.json

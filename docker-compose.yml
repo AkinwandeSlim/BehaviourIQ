@@ -1,0 +1,90 @@
+services:
+
+  # ── Kafka (Confluent KRaft — no Zookeeper) ───────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: behavioriq-kafka
+    ports:
+      - "9092:9092"     # internal Docker network  (app → kafka)
+      - "9094:9094"     # external host access     (kafka_producer.py from terminal)
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # Three listeners:
+      #   PLAINTEXT  → services inside Docker  (app, producer service)
+      #   CONTROLLER → internal KRaft only
+      #   EXTERNAL   → host machine access
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 1
+
+      # Required for KRaft — fixed cluster ID (any valid base64 string)
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 8s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # ── BehaviorIQ Streamlit App ─────────────────────────────────────────────────
+  behavioriq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: behavioriq-app
+    ports:
+      - "8501:8501"
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: behavioriq-events
+      STREAM_MODE: kafka
+    env_file:
+      - .env
+    volumes:
+      - chroma_data:/app/chroma_db
+      - ./data:/app/data:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Kafka Producer (start with: docker compose --profile producer up) ────────
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: behavioriq-producer
+    command: python data/kafka_producer.py
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: behavioriq-events
+      PRODUCER_DELAY: "0.4"
+      PRODUCER_LOOP: "true"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - producer
+
+volumes:
+  kafka_data:
+  chroma_data:

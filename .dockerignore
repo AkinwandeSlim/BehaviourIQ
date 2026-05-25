@@ -1,0 +1,42 @@
+# .dockerignore — files excluded from the Docker build context
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environment — never copy into image
+venv/
+env/
+.venv/
+.env.example
+
+# ChromaDB — persisted as Docker volume, not baked into image
+chroma_db/
+
+# Dev + IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+
+# Large data files that are mounted as volumes anyway
+# (comment out if you want them baked in instead)
+# data/user_events.csv

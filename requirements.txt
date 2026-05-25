@@ -1,0 +1,23 @@
+# BehaviorIQ Food Reviews — Dependencies
+
+# ── Core LLM & Claude Integration ───────────────────────────────────────────────
+anthropic>=0.28.0
+
+# ── Data Processing ────────────────────────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.26.0
+
+# ── UI ─────────────────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Optional (for visualization in existing features) ──────────────────────────
+plotly>=5.20.0
+langchain>=0.2.0
+langchain-anthropic>=0.1.15
+chromadb>=0.5.0
+sentence-transformers>=3.0.0,<5.0.0
+kafka-python>=2.0.2
+ 
